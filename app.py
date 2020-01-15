@@ -30,7 +30,8 @@ while(True):
         cv2.destroyAllWindows()
         exit()
 
-    ascii_image = Ascii_image(frame.tolist())
+    ascii_image = Ascii_image(frame.tolist(),
+                              2)
     ascii_image.draw_on_console()
 
     if show_capture:
