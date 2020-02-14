@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+import pafy
 from framerate import Framerate
 from ascii_image import Ascii_image
 
@@ -11,7 +12,19 @@ INPUT_SCREEN = {
     'h': 480
 }
 
-CAPTURE = cv2.VideoCapture(0)
+youtube = True
+
+if youtube:
+    url = "https://www.youtube.com/watch?v=ojdbDYahiCQ&list=PLwHzkHf4F9UJ3xuFTuoBXcWHaciYH8g8Q&index=24&t=0s"
+    video = pafy.new(url)
+    best = video.getbest(preftype="mp4")
+
+    CAPTURE = cv2.VideoCapture()
+    CAPTURE.open(best.url)
+else:
+    CAPTURE = cv2.VideoCapture(0)
+
+
 CAPTURE.set(3, INPUT_SCREEN['w'])
 CAPTURE.set(4, INPUT_SCREEN['h'])
 show_capture = True
@@ -30,8 +43,7 @@ while(True):
         cv2.destroyAllWindows()
         exit()
 
-    ascii_image = Ascii_image(frame.tolist(),
-                              2)
+    ascii_image = Ascii_image(frame.tolist(), 1)
     ascii_image.draw_on_console()
 
     if show_capture:
