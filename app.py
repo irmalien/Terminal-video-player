@@ -1,58 +1,81 @@
 import numpy as np
 import cv2
 import pafy
+import json
 from framerate import Framerate
 from ascii_image import Ascii_image
 
-
 print('Start app')
+with open('examples/example_local_file_2/config.json') as config_file:
+    config = json.load(config_file)
 
-INPUT_SCREEN = {
-    'w': 640,
-    'h': 480
-}
+SHOW_VIDEO = config['output']['show_video_window']
+FPS = Framerate(config['output']['framerate'])
+ASCII_SETTINGS = config['ascii']
+MIRROR_VIDEO = config['output']['mirror']
 
-youtube = True
 
-if youtube:
-    url = "https://www.youtube.com/watch?v=ojdbDYahiCQ&list=PLwHzkHf4F9UJ3xuFTuoBXcWHaciYH8g8Q&index=24&t=0s"
+def get_youtube_source():
+    url = config['source']['youtubeUrl']
     video = pafy.new(url)
     best = video.getbest(preftype="mp4")
+    return best.url
 
-    CAPTURE = cv2.VideoCapture()
-    CAPTURE.open(best.url)
+
+def create_capture(source):
+    cap = cv2.VideoCapture()
+    cap.open(source)
+    cap.set(3, config['source']['width'])
+    cap.set(4, config['source']['height'])
+    return cap
+
+
+def exit_program():
+    print('Gracefully exiting')
+    cv2.destroyAllWindows()
+    exit()
+
+
+if config['source']['youtubeUrl']:
+    try:
+        url = get_youtube_source()
+        CAPTURE = create_capture(url)
+    except OSError:
+        exit_program()
+elif config['source']['localFile']:
+    CAPTURE = create_capture(config['source']['localFile'])
+elif config['source']['webcam'] == 0:
+    CAPTURE = create_capture(0)
 else:
-    CAPTURE = cv2.VideoCapture(0)
+    raise NameError("Failure: not defined video source")
+    exit_program()
 
-
-CAPTURE.set(3, INPUT_SCREEN['w'])
-CAPTURE.set(4, INPUT_SCREEN['h'])
-show_capture = True
-fps = Framerate(30)
+try:
+    if not CAPTURE.isOpened():
+        raise NameError("Failure: can't load video source")
+except:
+    exit_program()
 
 while(True):
-    fps.counter()
+    FPS.counter()
 
-    try:
-        size, frame = CAPTURE.read()
+    size, frame = CAPTURE.read()
+    if MIRROR_VIDEO:
         frame = cv2.flip(frame, 1)
+    try:
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    except cv2.error as e:
-        print('Failure: webcam not found', e)
-        CAPTURE.release()
-        cv2.destroyAllWindows()
-        exit()
+    except:
+        raise NameError(
+            "Failure: lost connection to video source, please restart program")
+        exit_program()
 
-    ascii_image = Ascii_image(frame.tolist(), 1)
+    ascii_image = Ascii_image(frame.tolist(), ASCII_SETTINGS)
     ascii_image.draw_on_console()
 
-    if show_capture:
+    if SHOW_VIDEO:
         cv2.imshow('frame', frame)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
-# When everything done, release the capture
-print('Gracefully exiting')
-CAPTURE.release()
-cv2.destroyAllWindows()
+exit_program()

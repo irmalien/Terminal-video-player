@@ -1,0 +1,19 @@
+{
+	"source": {
+		"width": 640,
+		"height": 480,
+		"youtubeUrl": "https://www.youtube.com/watch?v=H6c_WgxTsMo",
+    "localFile": false,
+    "webcam": false
+	},
+	"output": {
+		"framerate": 15,
+		"show_video_window": true,
+    "mirror": false
+	},
+  "ascii": {
+    "style": 5,
+    "custom_style": false,
+    "inverted": true
+  }
+}

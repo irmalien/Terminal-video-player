@@ -5,11 +5,10 @@ class Ascii_image:
 
     def __init__(self,
                  image_arr,
-                 ascii_style=1,
-                 NEGATIVE_CAPTURE=True):
-        self.ASCII_STYLE = ascii_style
+                 ascii):
+        self.ASCII_STYLE = ascii['custom_style'] or ascii['style']
         self.ASCII_GRADIENT = self.__select_ascii_style()
-        self.NEGATIVE_CAPTURE = NEGATIVE_CAPTURE
+        self.NEGATIVE_CAPTURE = ascii['inverted']
         self.GRADIENT_SCALE_FACTOR = 256 / len(self.ASCII_GRADIENT)
         self.console = {
             'rows': int(os.popen('stty size', 'r').read().split()[0]),
@@ -31,6 +30,7 @@ class Ascii_image:
     # private
 
     def __select_ascii_style(self):
+        # TODO: Switch between default and custom style should be clearer
         switcher = {
             1: self.__ascii_gradient_1(),
             2: self.__ascii_gradient_2(),
