@@ -4,19 +4,21 @@ import pafy
 import json
 from framerate import Framerate
 from ascii_image import Ascii_image
+from cli_input import update_config
 
 print('Start app')
-with open('examples/example_local_file_2/config.json') as config_file:
+with open('config.json') as config_file:
     config = json.load(config_file)
+    config = update_config(config)
 
-SHOW_VIDEO = config['output']['show_video_window']
-FPS = Framerate(config['output']['framerate'])
 ASCII_SETTINGS = config['ascii']
-MIRROR_VIDEO = config['output']['mirror']
+SOURCE = config['source']
+FPS = Framerate(config['output']['framerate'])
+OUTPUT = config['output']
 
 
 def get_youtube_source():
-    url = config['source']['youtubeUrl']
+    url = SOURCE['youtubeUrl']
     video = pafy.new(url)
     best = video.getbest(preftype="mp4")
     return best.url
@@ -25,8 +27,8 @@ def get_youtube_source():
 def create_capture(source):
     cap = cv2.VideoCapture()
     cap.open(source)
-    cap.set(3, config['source']['width'])
-    cap.set(4, config['source']['height'])
+    cap.set(3, SOURCE['width'])
+    cap.set(4, SOURCE['height'])
     return cap
 
 
@@ -36,46 +38,46 @@ def exit_program():
     exit()
 
 
-if config['source']['youtubeUrl']:
+if SOURCE['youtubeUrl']:
     try:
         url = get_youtube_source()
         CAPTURE = create_capture(url)
     except OSError:
+        print("Failure: can't find youtube source")
         exit_program()
-elif config['source']['localFile']:
-    CAPTURE = create_capture(config['source']['localFile'])
-elif config['source']['webcam'] == 0:
+elif SOURCE['localFile']:
+    CAPTURE = create_capture(SOURCE['localFile'])
+elif SOURCE['webcam']:
     CAPTURE = create_capture(0)
 else:
-    raise NameError("Failure: not defined video source")
+    print("Failure: not defined video source")
+    exit_program()
+
+
+if not CAPTURE.isOpened():
+    print("Failure: can't load video source")
     exit_program()
 
 try:
-    if not CAPTURE.isOpened():
-        raise NameError("Failure: can't load video source")
-except:
+    while(True):
+        FPS.counter()
+
+        size, frame = CAPTURE.read()
+        if OUTPUT['mirror']:
+            frame = cv2.flip(frame, 1)
+        try:
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        except cv2.error:
+            print("Failure: lost connection to video source, please restart program")
+            exit_program()
+
+        ascii_image = Ascii_image(frame.tolist(), ASCII_SETTINGS)
+        ascii_image.draw_on_console()
+
+        if OUTPUT['show_window']:
+            cv2.imshow('frame', frame)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+except KeyboardInterrupt:
     exit_program()
-
-while(True):
-    FPS.counter()
-
-    size, frame = CAPTURE.read()
-    if MIRROR_VIDEO:
-        frame = cv2.flip(frame, 1)
-    try:
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    except:
-        raise NameError(
-            "Failure: lost connection to video source, please restart program")
-        exit_program()
-
-    ascii_image = Ascii_image(frame.tolist(), ASCII_SETTINGS)
-    ascii_image.draw_on_console()
-
-    if SHOW_VIDEO:
-        cv2.imshow('frame', frame)
-
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-
-exit_program()
+    # pass

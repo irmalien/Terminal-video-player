@@ -4,11 +4,11 @@
 		"height": 480,
 		"youtubeUrl": false,
     "localFile": false,
-    "webcam": 0
+    "webcam": true
 	},
 	"output": {
 		"framerate": 30,
-		"show_video_window": true,
+		"show_window": false,
     "mirror": true
 	},
   "ascii": {

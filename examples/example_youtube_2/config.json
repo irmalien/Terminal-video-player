@@ -8,7 +8,7 @@
 	},
 	"output": {
 		"framerate": 15,
-		"show_video_window": true,
+		"show_window": false,
     "mirror": false
 	},
   "ascii": {
