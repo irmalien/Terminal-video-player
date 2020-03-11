@@ -16,7 +16,6 @@ SOURCE = config['source']
 FPS = Framerate(config['output']['framerate'])
 OUTPUT = config['output']
 
-
 def get_youtube_source():
     url = SOURCE['youtubeUrl']
     video = pafy.new(url)
@@ -36,7 +35,6 @@ def exit_program():
     print('Gracefully exiting')
     cv2.destroyAllWindows()
     exit()
-
 
 if SOURCE['youtubeUrl']:
     try:
